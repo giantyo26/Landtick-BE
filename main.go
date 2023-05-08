@@ -33,5 +33,5 @@ func main() {
 	routes.RouteInit(e.Group("/api/v1"))
 
 	fmt.Println("server running:" + port)
-	e.Logger.Fatal(e.Start("localhost:" + port))
+	e.Logger.Fatal(e.Start(":" + port))
 }
