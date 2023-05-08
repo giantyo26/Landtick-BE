@@ -14,6 +14,8 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
+	"github.com/midtrans/midtrans-go"
+	"github.com/midtrans/midtrans-go/snap"
 	"gopkg.in/gomail.v2"
 )
 
@@ -120,6 +122,111 @@ func (h *handlerTransaction) CreateTransaction(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: newTransaction})
+}
+
+func (h *handlerTransaction) CreatePayment(c echo.Context) error {
+	userLogin := c.Get("userLogin")
+	userId := int(userLogin.(jwt.MapClaims)["id"].(float64))
+
+	request := new(transactiondto.TransactionRequest)
+	if err := c.Bind(request); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: "error1 :" + err.Error()})
+	}
+
+	id, _ := strconv.Atoi(c.Param("id"))
+	ticket, err := h.TransactionRepository.GetTicketById(id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: "error2 :" + err.Error()})
+	}
+
+	TransactionIdIsExist := false
+	var TransactionId int
+	for !TransactionIdIsExist {
+		TransactionId = int(time.Now().Unix())
+		transactionData, _ := h.TransactionRepository.GetTransaction(TransactionId)
+		if transactionData.ID == 0 {
+
+			TransactionIdIsExist = true
+		}
+	}
+	subTotal := ticket.Price * 1
+
+	transaction := models.Transaction{
+		ID:       TransactionId,
+		TicketID: ticket.ID,
+		Total:    subTotal,
+		UserID:   userId,
+		Qty:      1,
+		Status:   "success",
+	}
+
+	newTransaction, err := h.TransactionRepository.CreateTransaction(transaction)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Code: http.StatusInternalServerError, Message: "error3 :" + err.Error()})
+	}
+
+	dataTransaction, err := h.TransactionRepository.GetTransaction(newTransaction.ID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Code: http.StatusInternalServerError, Message: "error4 :" + err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: dataTransaction})
+}
+
+func (h *handlerTransaction) GetTransByUser(c echo.Context) error {
+	userLogin := c.Get("userLogin")
+	userId := int(userLogin.(jwt.MapClaims)["id"].(float64))
+
+	transaction, err := h.TransactionRepository.GetTicketTransaction(userId)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
+	}
+
+	var responseTransaction []transactiondto.TransactionResponse
+	for _, t := range transaction {
+		responseTransaction = append(responseTransaction, convertResponseTransaction(t))
+	}
+	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: responseTransaction})
+}
+
+func (h *handlerTransaction) PaymentTransaction(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
+	payment, err := h.TransactionRepository.GetPaymentByIdTrans(id)
+	fmt.Println(payment)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
+	}
+
+	var s = snap.Client{}
+	s.New(os.Getenv("SERVER_KEY"), midtrans.Sandbox)
+
+	req := &snap.Request{
+		TransactionDetails: midtrans.TransactionDetails{
+			OrderID:  strconv.Itoa(payment.ID),
+			GrossAmt: int64(payment.Total),
+		},
+		CreditCard: &snap.CreditCardDetails{
+			Secure: true,
+		},
+		CustomerDetail: &midtrans.CustomerDetails{
+			FName: payment.User.Fullname,
+			Email: payment.User.Email,
+		},
+	}
+
+	snapResp, _ := s.CreateTransaction(req)
+
+	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: snapResp})
+}
+
+func (h *handlerTransaction) GetIdPayment(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
+	transaction, err := h.TransactionRepository.GetTransaction(id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: transaction})
 }
 
 func (h *handlerTransaction) Notification(c echo.Context) error {
