@@ -8,8 +8,8 @@ type Transaction struct {
 	TicketID      int    `json:"ticket_id" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Ticket        Ticket `json:"ticket" `
 	Status        string `json:"status"`
-	Adult         int    `json:"adult" gorm:"type:tinyint"`
-	Infant        int    `json:"infant" gorm:"type:tinyint"`
+	Adult         int    `json:"adult" `
+	Infant        int    `json:"infant"`
 	Qty           int    `json:"qty"`
 	Total         int    `json:"total" form:"total"`
 }
