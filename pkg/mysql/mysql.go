@@ -3,6 +3,7 @@ package mysql
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -17,8 +18,13 @@ func DatabaseInit() {
 		log.Fatal("Error Loading .env file")
 	}
 
-	dsn := "postgresql://postgres:5u0u45M6Lo9MGy4EA01a@containers-us-west-38.railway.app:6110/railway"
+	var dbHost = os.Getenv("DB_HOST")
+	var dbUser = os.Getenv("DB_USER")
+	var dbPassword = os.Getenv("DB_PASSWORD")
+	var dbName = os.Getenv("DB_NAME")
+	var dbPort = os.Getenv("DB_PORT")
 
+	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", dbUser, dbPassword, dbHost, dbPort, dbName)
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
