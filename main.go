@@ -19,7 +19,7 @@ func main() {
 	if errEnv != nil {
 		panic("Failed to load env file")
 	}
-	var port = os.Getenv("PORT")
+	var PORT = os.Getenv("PORT")
 
 	mysql.DatabaseInit()
 	database.RunMigration()
@@ -32,6 +32,6 @@ func main() {
 
 	routes.RouteInit(e.Group("/api/v1"))
 
-	fmt.Println("server running:" + port)
-	e.Logger.Fatal(e.Start(":" + port))
+	fmt.Println("server running:" + PORT)
+	e.Logger.Fatal(e.Start(":" + PORT))
 }
