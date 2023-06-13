@@ -116,7 +116,7 @@ func (h *handlerTicket) FilterTickets(c echo.Context) error {
 	startStationIDParam := c.QueryParam("start_station_id")
 	destinationStationIDParam := c.QueryParam("destination_station_id")
 
-	// Parse the departure date 
+	// Parse the departure date
 	var departureDate time.Time
 	if departureDateStr != "" {
 		var err error
@@ -126,15 +126,23 @@ func (h *handlerTicket) FilterTickets(c echo.Context) error {
 		}
 	}
 
-	// Convert the station id to int
-	startStationID, err := strconv.Atoi(startStationIDParam)
-	if err != nil && startStationIDParam != "" {
-		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: "Invalid start_station_id"})
+	// Convert the station IDs to int if provided
+	var startStationID int
+	if startStationIDParam != "" {
+		var err error
+		startStationID, err = strconv.Atoi(startStationIDParam)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: "Invalid start_station_id"})
+		}
 	}
 
-	destinationStationID, err := strconv.Atoi(destinationStationIDParam)
-	if err != nil && destinationStationIDParam != "" {
-		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: "Invalid destination_station_id"})
+	var destinationStationID int
+	if destinationStationIDParam != "" {
+		var err error
+		destinationStationID, err = strconv.Atoi(destinationStationIDParam)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: "Invalid destination_station_id"})
+		}
 	}
 
 	// Call the FindAllTickets method of the ticket repository
