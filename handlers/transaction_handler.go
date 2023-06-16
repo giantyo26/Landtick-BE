@@ -48,11 +48,11 @@ func (h *handlerTransaction) GetTransaction(c echo.Context) error {
 	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: transaction})
 }
 
-func (h *handlerTransaction) FindTransactionsByUser(c echo.Context) error {
+func (h *handlerTransaction) FindTransactionByUser(c echo.Context) error {
 	userLogin := c.Get("userLogin")
 	userId := int(userLogin.(jwt.MapClaims)["id"].(float64))
 
-	transaction, err := h.TransactionRepository.FindTransactionsByUser(userId)
+	transaction, err := h.TransactionRepository.GetTicketTransaction(userId)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
 	}
@@ -62,19 +62,6 @@ func (h *handlerTransaction) FindTransactionsByUser(c echo.Context) error {
 		responseTransaction = append(responseTransaction, convertResponseTransaction(t))
 	}
 	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: responseTransaction})
-}
-
-func (h *handlerTransaction) GetTransactionByUser(c echo.Context) error {
-	userLogin := c.Get("userLogin")
-	userId := int(userLogin.(jwt.MapClaims)["id"].(float64))
-	transactionID, _ := strconv.Atoi(c.Param("id"))
-
-	transaction, err := h.TransactionRepository.GetTransactionByUser(int(userId), transactionID)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
-	}
-
-	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: transaction})
 }
 
 func (h *handlerTransaction) CreateTransaction(c echo.Context) error {
@@ -124,22 +111,6 @@ func (h *handlerTransaction) CreateTransaction(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: dataTransaction})
-}
-
-func (h *handlerTransaction) GetTransByUser(c echo.Context) error {
-	userLogin := c.Get("userLogin")
-	userId := int(userLogin.(jwt.MapClaims)["id"].(float64))
-
-	transaction, err := h.TransactionRepository.GetTicketTransaction(userId)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
-	}
-
-	var responseTransaction []transactiondto.TransactionResponse
-	for _, t := range transaction {
-		responseTransaction = append(responseTransaction, convertResponseTransaction(t))
-	}
-	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: responseTransaction})
 }
 
 func (h *handlerTransaction) PaymentTransaction(c echo.Context) error {
