@@ -83,53 +83,6 @@ func (h *handlerTransaction) CreateTransaction(c echo.Context) error {
 
 	request := new(transactiondto.TransactionRequest)
 	if err := c.Bind(request); err != nil {
-		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
-	}
-
-	id, _ := strconv.Atoi(c.Param("id"))
-	ticket, err := h.TicketRepository.GetTicket(id)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
-	}
-
-	var transactionIsMatch = false
-	var transactionId int
-	for !transactionIsMatch {
-		transactionId = int(time.Now().Unix())
-		transactionData, _ := h.TransactionRepository.GetTransaction(transactionId)
-		if transactionData.ID == 0 {
-			transactionIsMatch = true
-		}
-	}
-
-	totalPrice := ticket.Price * request.Adult
-	totalQty := request.Adult + request.Infant
-
-	transaction := models.Transaction{
-		ID:       transactionId,
-		UserID:   int(userId),
-		TicketID: ticket.ID,
-		Adult:    request.Adult,
-		Infant:   request.Infant,
-		Qty:      totalQty,
-		Total:    totalPrice,
-		Status:   "pending",
-	}
-
-	newTransaction, err := h.TransactionRepository.CreateTransaction(transaction)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Code: http.StatusInternalServerError, Message: err.Error()})
-	}
-
-	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: newTransaction})
-}
-
-func (h *handlerTransaction) CreatePayment(c echo.Context) error {
-	userLogin := c.Get("userLogin")
-	userId := int(userLogin.(jwt.MapClaims)["id"].(float64))
-
-	request := new(transactiondto.TransactionRequest)
-	if err := c.Bind(request); err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: "error1 :" + err.Error()})
 	}
 
