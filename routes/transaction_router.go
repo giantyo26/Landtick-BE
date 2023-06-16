@@ -17,10 +17,12 @@ func TransactionRoute(e *echo.Group) {
 
 	e.GET("/transactions", h.FindTransactions)
 	e.GET("/transactions/:id", h.GetTransaction)
-	e.POST("/transactions/:id", middleware.Auth(h.CreateTransaction))
+	e.POST("/create-trans/:id", middleware.Auth(h.CreateTransaction))
 	e.GET("/user-transactions", middleware.Auth(h.FindTransactionsByUser))
 	e.GET("/user-transactions/:id", middleware.Auth(h.GetTransactionByUser))
+	e.POST("/transactions/:id", middleware.Auth(h.CreateTransaction))
 	e.DELETE("/transactions/:id", middleware.Auth(h.DeleteTransaction))
+	e.POST("/create-trans/:id", middleware.Auth(h.CreatePayment))
 	e.GET("/order-user", middleware.Auth(h.GetTransByUser))
 	e.GET("/get-idpayment/:id", middleware.Auth(h.GetIdPayment))
 	e.GET("/payments/:id", middleware.Auth(h.PaymentTransaction))
